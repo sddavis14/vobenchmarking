@@ -1,0 +1,4 @@
+stereo_odometry_node:
+  ros__parameters:
+    approx_sync: true
+    approx_sync_max_interval: 5.0
