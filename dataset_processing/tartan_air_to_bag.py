@@ -1,7 +1,10 @@
+#!/usr/bin/env python3
+
 #import rclpy
 from rclpy.serialization import serialize_message
 from std_msgs.msg import String
 from sensor_msgs.msg import CompressedImage
+from sensor_msgs.msg import CameraInfo
 from sensor_msgs.msg import Image as RosImage
 from nav_msgs.msg import Odometry
 
@@ -14,7 +17,7 @@ import os
 
 folder = 'abandonedfactory/Easy'
 seq = 'P000'
-framerate = 20
+framerate = 2
 
 def get_left_image_filename(idx):
     image_name = '{:06d}_left.png'.format(idx)
@@ -40,16 +43,28 @@ def main(args=None):
     writer.open(storage_options, converter_options)
 
     left_topic = rosbag2_py._storage.TopicMetadata(
-        name='image_left',
-        type='sensor_msgs/msg/Image',
+        name='camera_left/image_rect/compressed',
+        type='sensor_msgs/msg/CompressedImage',
         serialization_format='cdr')
     writer.create_topic(left_topic)
 
+    left_info_topic = rosbag2_py._storage.TopicMetadata(
+        name='camera_left/camera_info',
+        type='sensor_msgs/msg/CameraInfo',
+        serialization_format='cdr')
+    writer.create_topic(left_info_topic)
+
     right_topic = rosbag2_py._storage.TopicMetadata(
-        name='image_right',
-        type='sensor_msgs/msg/Image',
+        name='camera_right/image_rect/compressed',
+        type='sensor_msgs/msg/CompressedImage',
         serialization_format='cdr')
     writer.create_topic(right_topic)
+
+    right_info_topic = rosbag2_py._storage.TopicMetadata(
+        name='camera_right/camera_info',
+        type='sensor_msgs/msg/CameraInfo',
+        serialization_format='cdr')
+    writer.create_topic(right_info_topic)
 
     odom_left_topic = rosbag2_py._storage.TopicMetadata(
         name='odom_left',
@@ -67,46 +82,81 @@ def main(args=None):
         filename = get_left_image_filename(i)
         print(filename)
         img = Image.open(filename, mode='r', formats=None)
-        rgb_img = img.convert('RGB')
 
-        msg = RosImage()
-        msg.height = rgb_img.height
-        msg.width = rgb_img.width
-        msg.encoding = "rgb8"
-        msg.is_bigendian = False
-        msg.step = 3 * rgb_img.width
-        msg.data = np.array(rgb_img).tobytes()
+        img_byte_arr = io.BytesIO()
+        img.save(img_byte_arr, format='jpeg')
+        img_byte_arr = img_byte_arr.getvalue()
+
+        msg = CompressedImage()
+        msg.format = 'jpeg'
+        msg.data = np.array(img_byte_arr).tobytes()
 
         ns = (int) (i * 1000000 * (1/framerate) * 1000)
         t = Time(seconds=0, nanoseconds=ns)
         msg.header.stamp = t.to_msg()
+        msg.header.frame_id = 'left_camera'
 
+        info_msg = CameraInfo()
+        info_msg.header = msg.header
+        info_msg.height = 480
+        info_msg.width = 640
+        info_msg.k = np.array([320, 0, 320,
+                               0, 320, 240,
+                               0, 0, 1])
+        info_msg.r = np.array([1, 0, 0,
+                               0, 1, 0,
+                               0, 0, 1])
+        info_msg.p = np.array([320, 0, 320, 0,
+                               0, 320, 240, 0,
+                               0, 0, 1, 0])
+
+        writer.write('camera_left/camera_info',
+                serialize_message(info_msg),
+                ns)
+        
         writer.write(
-                'image_left',
+                'camera_left/image_rect/compressed',
                 serialize_message(msg),
                 ns)
-
 
     for i in range(0, img_count):
         filename = get_right_image_filename(i)
         print(filename)
         img = Image.open(filename, mode='r', formats=None)
-        rgb_img = img.convert('RGB')
 
-        msg = RosImage()
-        msg.height = rgb_img.height
-        msg.width = rgb_img.width
-        msg.encoding = "rgb8"
-        msg.is_bigendian = False
-        msg.step = 3 * rgb_img.width
-        msg.data = np.array(rgb_img).tobytes()
+        img_byte_arr = io.BytesIO()
+        img.save(img_byte_arr, format='jpeg')
+        img_byte_arr = img_byte_arr.getvalue()
+
+        msg = CompressedImage()
+        msg.format = 'jpeg'
+        msg.data = np.array(img_byte_arr).tobytes()
 
         ns = (int) (i * 1000000 * (1/framerate) * 1000)
         t = Time(seconds=0, nanoseconds=ns)
         msg.header.stamp = t.to_msg()
+        msg.header.frame_id = 'right_camera'
+
+        info_msg = CameraInfo()
+        info_msg.header = msg.header
+        info_msg.height = 480
+        info_msg.width = 640
+        info_msg.k = np.array([320, 0, 320,
+                               0, 320, 240,
+                               0, 0, 1])
+        info_msg.r = np.array([1, 0, 0,
+                               0, 1, 0,
+                               0, 0, 1])
+        info_msg.p = np.array([320, 0, 320, 0,
+                               0, 320, 240, 0,
+                               0, 0, 1, 0])
+
+        writer.write('camera_right/camera_info',
+                serialize_message(info_msg),
+                ns)
 
         writer.write(
-                'image_right',
+                'camera_right/image_rect/compressed',
                 serialize_message(msg),
                 ns)
 
