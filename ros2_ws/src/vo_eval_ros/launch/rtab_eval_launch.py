@@ -43,13 +43,31 @@ def generate_launch_description():
         Node(
             package='tf2_ros', 
             executable='static_transform_publisher', 
-            arguments=['-0.125', '0', '0', '0', '0', '0', 'base_link', 'left_camera',  ], 
+            arguments=['0', '0.125', '0', '1.57', '0', '1.57', 'base_link', 'left_camera',  ], 
             output='screen'
         ),
         Node(
             package='tf2_ros', 
             executable='static_transform_publisher', 
-            arguments=['0.125', '0', '0', '0', '0', '0', 'base_link', 'right_camera',  ], 
+            arguments=['0', '-0.125', '0', '1.57', '0', '1.57', 'base_link', 'right_camera',  ], 
+            output='screen'
+        ),
+        Node(
+            package='tf2_ros', 
+            executable='static_transform_publisher', 
+            arguments=['0', '0', '0', '-1.57', '-1.57', '0', 'left_camera', 'left_camera_ned',  ], 
+            output='screen'
+        ),
+        Node(
+            package='tf2_ros', 
+            executable='static_transform_publisher', 
+            arguments=['0', '0', '0', '-1.57', '-1.57', '0', 'right_camera', 'right_camera_ned',  ], 
+            output='screen'
+        ),
+        Node(
+            package='tf2_ros', 
+            executable='static_transform_publisher', 
+            arguments=['0', '0', '0', '0', '0', '0', 'map', 'odom',  ], 
             output='screen'
         ),
         Node(

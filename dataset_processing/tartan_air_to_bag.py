@@ -17,7 +17,7 @@ import os
 
 folder = 'abandonedfactory/Easy'
 seq = 'P000'
-framerate = 2
+framerate = 10
 
 def get_left_image_filename(idx):
     image_name = '{:06d}_left.png'.format(idx)
@@ -147,7 +147,7 @@ def main(args=None):
         info_msg.r = np.array([1, 0, 0,
                                0, 1, 0,
                                0, 0, 1])
-        info_msg.p = np.array([320, 0, 320, 0,
+        info_msg.p = np.array([320, 0, 320, -80,
                                0, 320, 240, 0,
                                0, 0, 1, 0])
 
@@ -170,7 +170,7 @@ def main(args=None):
         t = Time(seconds=0, nanoseconds=ns)
         msg.header.stamp = t.to_msg()
         msg.header.frame_id = 'map'
-        msg.child_frame_id = 'left_camera'
+        msg.child_frame_id = 'left_camera_ned'
 
         x = left_camera_gt[i][0]
         y = left_camera_gt[i][1]
@@ -202,7 +202,7 @@ def main(args=None):
         t = Time(seconds=0, nanoseconds=ns)
         msg.header.stamp = t.to_msg()
         msg.header.frame_id = 'map'
-        msg.child_frame_id = 'right_camera'
+        msg.child_frame_id = 'right_camera_ned'
 
         x = right_camera_gt[i][0]
         y = right_camera_gt[i][1]

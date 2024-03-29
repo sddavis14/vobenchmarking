@@ -18,11 +18,6 @@ find_package(rclpy REQUIRED)
 
 ament_python_install_package(${PROJECT_NAME})
 
-install(PROGRAMS
-  src/image_decompressor_left.py
-  src/image_decompressor_right.py
-  DESTINATION lib/${PROJECT_NAME}
-)
 
 install(DIRECTORY
   launch config
