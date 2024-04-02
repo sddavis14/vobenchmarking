@@ -2,20 +2,28 @@
 from rclpy.serialization import serialize_message
 from std_msgs.msg import String
 from sensor_msgs.msg import CompressedImage
+from sensor_msgs.msg import CameraInfo
 from sensor_msgs.msg import Image as RosImage
 from PIL import Image
+from nav_msgs.msg import Odometry
 import io
 import rosbag2_py
 from rclpy.time import Time
 import numpy as np
 
-folder = 'recording/undistorted_images'
+folder = 'recording/'
 seq = 'P001'
 image_min = 1585068331330778880
 image_max = 1585068756635811584
+framerate = 20
+maxlimit = 1000
 
 import os
 
+
+def get_full_image_path(cam_key: str, image_name: str) -> str:
+    name: str = folder + 'undistorted_images/' + cam_key + image_name + '.png'
+    return name
 
 def main(args=None):
     writer = rosbag2_py.SequentialWriter()
@@ -27,82 +35,186 @@ def main(args=None):
     writer.open(storage_options, converter_options)
 
     left_topic = rosbag2_py._storage.TopicMetadata(
-        name='image_left',
-        type='sensor_msgs/msg/Image',
+        name='camera_left/image_rect/compressed',
+        type='sensor_msgs/msg/CompressedImage',
         serialization_format='cdr')
     writer.create_topic(left_topic)
 
+    left_info_topic = rosbag2_py._storage.TopicMetadata(
+        name='camera_left/camera_info',
+        type='sensor_msgs/msg/CameraInfo',
+        serialization_format='cdr')
+    writer.create_topic(left_info_topic)
+
     right_topic = rosbag2_py._storage.TopicMetadata(
-        name='image_right',
-        type='sensor_msgs/msg/Image',
+        name='camera_right/image_rect/compressed',
+        type='sensor_msgs/msg/CompressedImage',
         serialization_format='cdr')
     writer.create_topic(right_topic)
 
-    directory = os.fsencode(folder+'/cam0')
-    limit: int = 20
+    right_info_topic = rosbag2_py._storage.TopicMetadata(
+        name='camera_right/camera_info',
+        type='sensor_msgs/msg/CameraInfo',
+        serialization_format='cdr')
+    writer.create_topic(right_info_topic)
 
-    for file in os.listdir(directory):
-        filename = os.fsdecode(file)
-        print(filename)
-        if filename.endswith(".png"):
-            img = Image.open(folder + '/' + 'cam0/' + filename, mode='r', formats=None)
+    odom_left_topic = rosbag2_py._storage.TopicMetadata(
+        name='odom_left',
+        type='nav_msgs/msg/Odometry',
+        serialization_format='cdr')
+    writer.create_topic(odom_left_topic)
 
-            rgb_img = img.convert('RGB')
+    odom_right_topic = rosbag2_py._storage.TopicMetadata(
+        name='odom_right',
+        type='nav_msgs/msg/Odometry',
+        serialization_format='cdr')
+    writer.create_topic(odom_right_topic)
 
-            msg = RosImage()
-            msg.height = rgb_img.height
-            msg.width = rgb_img.width
-            msg.encoding = "rgb8"
-            msg.is_bigendian = False
-            msg.step = 3 * rgb_img.width
-            msg.data = np.array(rgb_img).tobytes()
+    camera_gt = np.loadtxt(folder + 'poses/' + 'GNSSPoses.txt', delimiter=',')
+    timestamps = np.loadtxt(folder + 'times.txt', delimiter=' ')
 
-            ns = (int)(filename.strip('.')[0])
-            t = Time(seconds=0, nanoseconds=ns)
-            msg.header.stamp = t.to_msg()
+    for i in range(0, maxlimit):
+        filename = get_full_image_path('cam0/', str(int(timestamps[i][0])))
+        img = Image.open(filename, mode='r', formats=None)
 
-            writer.write(
-                'image_left',
-                serialize_message(msg),
-                ns)
-            limit -= 1
-            if limit == 0:
-                break
-        else:
-            continue
+        img_byte_arr = io.BytesIO()
+        img.save(img_byte_arr, format='png')
+        img_byte_arr = img_byte_arr.getvalue()
 
-    directory = os.fsencode(folder+'/cam1')
+        msg = CompressedImage()
+        msg.format = 'png'
+        msg.data = np.array(img_byte_arr).tobytes()
 
-    limit = 20
+        ns = int(timestamps[i][0])
+        t = Time(seconds=0, nanoseconds=ns)
+        msg.header.stamp = t.to_msg()
+        msg.header.frame_id = 'left_camera'
 
-    for file in os.listdir(directory):
-        filename = os.fsdecode(file)
-        if filename.endswith(".png"):
-            img = Image.open(folder + '/' + 'cam1/' + filename, mode='r', formats=None)
+        info_msg = CameraInfo()
+        info_msg.header = msg.header
+        info_msg.height = 400
+        info_msg.width = 800
+        info_msg.k = np.array([1056, 0, 800,
+                               0, 1056, 346,
+                               0, 0, 1])
+        info_msg.r = np.array([1, 0, 0,
+                               0, 1, 0,
+                               0, 0, 1])
+        info_msg.p = np.array([1056, 0, 800, 0,
+                               0, 1056, 346, 0,
+                               0, 0, 1, 0])
 
-            rgb_img = img.convert('RGB')
+        writer.write('camera_left/camera_info',
+                     serialize_message(info_msg),
+                     ns)
 
-            msg = RosImage()
-            msg.height = rgb_img.height
-            msg.width = rgb_img.width
-            msg.encoding = "rgb8"
-            msg.is_bigendian = False
-            msg.step = 3 * rgb_img.width
-            msg.data = np.array(rgb_img).tobytes()
+        writer.write(
+            'camera_left/image_rect/compressed',
+            serialize_message(msg),
+            ns)
 
-            ns = (int)(filename.strip('.')[0])
-            t = Time(seconds=0, nanoseconds=ns)
-            msg.header.stamp = t.to_msg()
+    for i in range(0, maxlimit):
+        filename = get_full_image_path('cam1/', str(int(timestamps[i][0])))
+        img = Image.open(filename, mode='r', formats=None)
 
-            writer.write(
-                'image_right',
-                serialize_message(msg),
-                ns)
-            limit -= 1
-            if limit == 0:
-                break
-        else:
-            continue
+        img_byte_arr = io.BytesIO()
+        img.save(img_byte_arr, format='png')
+        img_byte_arr = img_byte_arr.getvalue()
+
+        msg = CompressedImage()
+        msg.format = 'png'
+        msg.data = np.array(img_byte_arr).tobytes()
+
+        ns = int(timestamps[i][0])
+        t = Time(seconds=0, nanoseconds=ns)
+        msg.header.stamp = t.to_msg()
+        msg.header.frame_id = 'right_camera'
+
+        info_msg = CameraInfo()
+        info_msg.header = msg.header
+        info_msg.height = 400
+        info_msg.width = 800
+        info_msg.k = np.array([1058, 0, 825,
+                               0, 1059, 345,
+                               0, 0, 1])
+        info_msg.r = np.array([1, 0, 0,
+                               0, 1, 0,
+                               0, 0, 1])
+        info_msg.p = np.array([1058, 0, 825, 0,
+                               0, 1059, 345, 0,
+                               0, 0, 1, 0])
+
+        writer.write('camera_right/camera_info',
+                     serialize_message(info_msg),
+                     ns)
+
+        writer.write(
+            'camera_right/image_rect/compressed',
+            serialize_message(msg),
+            ns)
+
+    for i in range(0, maxlimit):
+        msg = Odometry()
+        ns = int(timestamps[i][0])
+        t = Time(seconds=0, nanoseconds=ns)
+        msg.header.stamp = t.to_msg()
+        msg.header.frame_id = 'map'
+        msg.child_frame_id = 'left_camera'
+
+        x = camera_gt[i][1]
+        y = camera_gt[i][2]
+        z = camera_gt[i][3]
+
+        qx = camera_gt[i][4]
+        qy = camera_gt[i][5]
+        qz = camera_gt[i][6]
+        qw = camera_gt[i][7]
+
+        msg.pose.pose.position.x = x
+        msg.pose.pose.position.y = y
+        msg.pose.pose.position.z = z
+
+        msg.pose.pose.orientation.x = qx
+        msg.pose.pose.orientation.y = qy
+        msg.pose.pose.orientation.z = qz
+        msg.pose.pose.orientation.w = qw
+
+        writer.write(
+            'odom_left',
+            serialize_message(msg),
+            ns)
+
+    for i in range(0, maxlimit):
+        msg = Odometry()
+        ns = int(timestamps[i][0])
+        t = Time(seconds=0, nanoseconds=ns)
+        msg.header.stamp = t.to_msg()
+        msg.header.frame_id = 'map'
+        msg.child_frame_id = 'right_camera'
+
+        x = camera_gt[i][1]
+        y = camera_gt[i][2]
+        z = camera_gt[i][3]
+
+        qx = camera_gt[i][4]
+        qy = camera_gt[i][5]
+        qz = camera_gt[i][6]
+        qw = camera_gt[i][7]
+
+        msg.pose.pose.position.x = x
+        msg.pose.pose.position.y = y
+        msg.pose.pose.position.z = z
+
+        msg.pose.pose.orientation.x = qx
+        msg.pose.pose.orientation.y = qy
+        msg.pose.pose.orientation.z = qz
+        msg.pose.pose.orientation.w = qw
+
+        writer.write(
+            'odom_right',
+            serialize_message(msg),
+            ns)
+
 
 
 if __name__ == '__main__':
