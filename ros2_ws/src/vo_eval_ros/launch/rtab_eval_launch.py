@@ -1,6 +1,7 @@
 from launch import LaunchDescription
 from launch_ros.actions import Node
 import launch_ros
+from ament_index_python.packages import get_package_share_directory
 
 def generate_launch_description():
     return LaunchDescription([
@@ -37,7 +38,8 @@ def generate_launch_description():
                 ('right/image_rect', '/camera_right/image_rect'),
                 ('right/camera_info', '/camera_right/camera_info'),
             ],
-            parameters=['/home/ubuntu/vobenchmarking/ros2_ws/src/vo_eval_ros/config/odometer_params.yml'],
+
+            parameters=[get_package_share_directory('vo_eval_ros') + '/config/odometer_params.yml'],
             output='screen'
         ),
         Node(
