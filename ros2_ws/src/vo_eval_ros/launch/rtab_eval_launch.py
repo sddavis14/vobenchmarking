@@ -38,7 +38,6 @@ def generate_launch_description():
                 ('right/image_rect', '/camera_right/image_rect'),
                 ('right/camera_info', '/camera_right/camera_info'),
             ],
-
             parameters=[get_package_share_directory('vo_eval_ros') + '/config/odometer_params.yml'],
             output='screen'
         ),
@@ -69,7 +68,7 @@ def generate_launch_description():
         Node(
             package='tf2_ros', 
             executable='static_transform_publisher', 
-            arguments=['0', '0', '0', '0', '0', '0', 'map', 'odom',  ], 
+            arguments=['0', '0', '0', '0', '0', '0', 'map', 'odom'], 
             output='screen'
         ),
         Node(
@@ -78,10 +77,10 @@ def generate_launch_description():
             arguments=[], 
             output='screen'
         ),
-        # Node(
-        #     package='tf2_ros', 
-        #     executable='static_transform_publisher', 
-        #     arguments=['0', '0', '0', '0', '0', '0', 'odom_left', 'map'], 
-        #     output='screen'
-        # ),
+        Node(
+            package='vo_eval_ros', 
+            executable='rtab_odom_eval_supervisor',
+            arguments=[], 
+            output='screen'
+        ),
     ])
