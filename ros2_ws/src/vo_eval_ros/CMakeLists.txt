@@ -15,9 +15,23 @@ find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_python REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclpy REQUIRED)
+find_package (Eigen3 3.3 REQUIRED)
+find_package(rtabmap_msgs REQUIRED)
+find_package(nav_msgs REQUIRED)
+find_package(tf2_ros REQUIRED)
+find_package(tf2_eigen REQUIRED)
 
 ament_python_install_package(${PROJECT_NAME})
 
+add_executable(rtab_odom_eval_supervisor src/rtab_odom_eval_supervisor.cpp)
+target_link_libraries (rtab_odom_eval_supervisor Eigen3::Eigen)
+
+ament_target_dependencies(rtab_odom_eval_supervisor rclcpp rtabmap_msgs nav_msgs tf2_ros tf2_eigen)
+
+install(TARGETS
+  rtab_odom_eval_supervisor
+  DESTINATION lib/${PROJECT_NAME}
+)
 
 install(DIRECTORY
   launch config

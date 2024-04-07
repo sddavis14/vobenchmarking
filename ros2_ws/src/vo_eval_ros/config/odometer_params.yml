@@ -1,6 +1,7 @@
 stereo_odometry_node:
   ros__parameters:
     approx_sync: false
-    approx_sync_max_interval: 1.0
     use_sim_time: true
-    initial_pose: "-11.790, -4.795, -1.666, 0, 0, 1.7584174"
+    ground_truth_frame_id: 'odom'
+    ground_truth_base_frame_id: 'base_link_gt'
+    initial_pose: "0, 0, 0, 0, 0, 0"
