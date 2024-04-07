@@ -18,8 +18,7 @@ int main(int argc, char **argv) {
 
     auto node = rclcpp::Node::make_shared("rtab_odom_eval_supervisor");
 
-    auto client =
-            node->create_client<rtabmap_msgs::srv::ResetPose>("reset_odom_to_pose");
+    auto client = node->create_client<rtabmap_msgs::srv::ResetPose>("reset_odom_to_pose");
 
     auto request = std::make_shared<rtabmap_msgs::srv::ResetPose::Request>();
     auto tf_broadcaster = std::make_shared<tf2_ros::TransformBroadcaster>(node);
@@ -58,7 +57,7 @@ int main(int argc, char **argv) {
         Eigen::Quaterniond quat(odom_to_base_link.linear());
 
         auto gt_odom = odom_msg;
-        gt_odom.child_frame_id = "base_link";
+        gt_odom.child_frame_id = "base_link_gt";
         gt_odom.pose.pose.orientation.w = quat.w();
         gt_odom.pose.pose.orientation.x = quat.x();
         gt_odom.pose.pose.orientation.y = quat.y();

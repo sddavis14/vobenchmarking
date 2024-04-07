@@ -1,0 +1,63 @@
+rosbag2_bagfile_information:
+  version: 7
+  storage_identifier: mcap
+  duration:
+    nanoseconds: 217500000000
+  starting_time:
+    nanoseconds_since_epoch: 0
+  message_count: 13056
+  topics_with_message_count:
+    - topic_metadata:
+        name: camera_right/camera_info
+        type: sensor_msgs/msg/CameraInfo
+        serialization_format: cdr
+        offered_qos_profiles: ""
+        type_description_hash: ""
+      message_count: 2176
+    - topic_metadata:
+        name: camera_right/image_rect/compressed
+        type: sensor_msgs/msg/CompressedImage
+        serialization_format: cdr
+        offered_qos_profiles: ""
+        type_description_hash: ""
+      message_count: 2176
+    - topic_metadata:
+        name: camera_left/camera_info
+        type: sensor_msgs/msg/CameraInfo
+        serialization_format: cdr
+        offered_qos_profiles: ""
+        type_description_hash: ""
+      message_count: 2176
+    - topic_metadata:
+        name: odom_right
+        type: nav_msgs/msg/Odometry
+        serialization_format: cdr
+        offered_qos_profiles: ""
+        type_description_hash: ""
+      message_count: 2176
+    - topic_metadata:
+        name: odom_left
+        type: nav_msgs/msg/Odometry
+        serialization_format: cdr
+        offered_qos_profiles: ""
+        type_description_hash: ""
+      message_count: 2176
+    - topic_metadata:
+        name: camera_left/image_rect/compressed
+        type: sensor_msgs/msg/CompressedImage
+        serialization_format: cdr
+        offered_qos_profiles: ""
+        type_description_hash: ""
+      message_count: 2176
+  compression_format: ""
+  compression_mode: ""
+  relative_file_paths:
+    - tartan_air_bag_0.mcap
+  files:
+    - path: tartan_air_bag_0.mcap
+      starting_time:
+        nanoseconds_since_epoch: 0
+      duration:
+        nanoseconds: 217500000000
+      message_count: 13056
+  custom_data: ~
