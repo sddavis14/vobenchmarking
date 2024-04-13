@@ -26,10 +26,19 @@ ament_python_install_package(${PROJECT_NAME})
 add_executable(rtab_odom_eval_supervisor src/rtab_odom_eval_supervisor.cpp)
 target_link_libraries (rtab_odom_eval_supervisor Eigen3::Eigen)
 
+add_executable(rtab_gnss_odom_eval_supervisor src/rtab_gnss_odom_eval_supervisor.cpp)
+target_link_libraries (rtab_gnss_odom_eval_supervisor Eigen3::Eigen)
+
 ament_target_dependencies(rtab_odom_eval_supervisor rclcpp rtabmap_msgs nav_msgs tf2_ros tf2_eigen)
+ament_target_dependencies(rtab_gnss_odom_eval_supervisor rclcpp rtabmap_msgs nav_msgs tf2_ros tf2_eigen)
 
 install(TARGETS
   rtab_odom_eval_supervisor
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+install(TARGETS
+  rtab_gnss_odom_eval_supervisor
   DESTINATION lib/${PROJECT_NAME}
 )
 

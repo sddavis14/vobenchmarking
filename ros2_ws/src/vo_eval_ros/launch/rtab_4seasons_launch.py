@@ -67,7 +67,7 @@ def generate_launch_description():
         ),
         Node(
             package='vo_eval_ros',
-            executable='rtab_odom_eval_supervisor',
+            executable='rtab_gnss_odom_eval_supervisor',
             arguments=[],
             output='screen'
         ),

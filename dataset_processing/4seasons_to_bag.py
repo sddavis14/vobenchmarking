@@ -58,11 +58,11 @@ def main(args=None):
         serialization_format='cdr')
     writer.create_topic(right_info_topic)
 
-    odom_fixed_topic = rosbag2_py._storage.TopicMetadata(
-        name='odom_fixed',
+    odom_gnss_topic = rosbag2_py._storage.TopicMetadata(
+        name='odom_gnss',
         type='nav_msgs/msg/Odometry',
         serialization_format='cdr')
-    writer.create_topic(odom_fixed_topic)
+    writer.create_topic(odom_gnss_topic)
 
     camera_gt = np.loadtxt(folder + 'poses/' + 'GNSSPoses.txt', delimiter=',')
     timestamps = np.loadtxt(folder + 'times.txt', delimiter=' ')
@@ -174,7 +174,7 @@ def main(args=None):
         msg.pose.pose.orientation.w = qw
 
         writer.write(
-            'odom_fixed',
+            'odom_gnss',
             serialize_message(msg),
             ns)
 
