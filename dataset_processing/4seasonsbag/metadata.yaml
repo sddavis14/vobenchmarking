@@ -1,0 +1,56 @@
+rosbag2_bagfile_information:
+  version: 7
+  storage_identifier: mcap
+  duration:
+    nanoseconds: 33000079872
+  starting_time:
+    nanoseconds_since_epoch: 1585068331330778880
+  message_count: 5000
+  topics_with_message_count:
+    - topic_metadata:
+        name: odom_fixed
+        type: nav_msgs/msg/Odometry
+        serialization_format: cdr
+        offered_qos_profiles: ""
+        type_description_hash: ""
+      message_count: 1000
+    - topic_metadata:
+        name: camera_right/camera_info
+        type: sensor_msgs/msg/CameraInfo
+        serialization_format: cdr
+        offered_qos_profiles: ""
+        type_description_hash: ""
+      message_count: 1000
+    - topic_metadata:
+        name: camera_right/image_rect/compressed
+        type: sensor_msgs/msg/CompressedImage
+        serialization_format: cdr
+        offered_qos_profiles: ""
+        type_description_hash: ""
+      message_count: 1000
+    - topic_metadata:
+        name: camera_left/camera_info
+        type: sensor_msgs/msg/CameraInfo
+        serialization_format: cdr
+        offered_qos_profiles: ""
+        type_description_hash: ""
+      message_count: 1000
+    - topic_metadata:
+        name: camera_left/image_rect/compressed
+        type: sensor_msgs/msg/CompressedImage
+        serialization_format: cdr
+        offered_qos_profiles: ""
+        type_description_hash: ""
+      message_count: 1000
+  compression_format: ""
+  compression_mode: ""
+  relative_file_paths:
+    - 4seasonsbag_0.mcap
+  files:
+    - path: 4seasonsbag_0.mcap
+      starting_time:
+        nanoseconds_since_epoch: 1585068331330778880
+      duration:
+        nanoseconds: 33000079872
+      message_count: 5000
+  custom_data: ~
