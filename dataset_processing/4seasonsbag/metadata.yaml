@@ -8,7 +8,7 @@ rosbag2_bagfile_information:
   message_count: 5000
   topics_with_message_count:
     - topic_metadata:
-        name: odom_fixed
+        name: odom_gnss
         type: nav_msgs/msg/Odometry
         serialization_format: cdr
         offered_qos_profiles: ""
