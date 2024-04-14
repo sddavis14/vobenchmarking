@@ -26,7 +26,6 @@ def get_full_image_path(cam_key: str, image_name: str) -> str:
     return name
 
 def main(args=None):
-    # For dummy commit.
     writer = rosbag2_py.SequentialWriter()
 
     storage_options = rosbag2_py._storage.StorageOptions(
