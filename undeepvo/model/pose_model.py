@@ -109,7 +109,7 @@ class PoseNetResNet(nn.Module):
         x = torch.cat([target_frame, reference_frame], dim=1)
         x = self._first_layer(x)
         x = self.resnet_part(x)
-        x = self.padding(x) # make MPS happy
+        #x = self.padding(x) # make MPS happy
         x = self.avgpool(x)
         out = self.flatten(x)
 

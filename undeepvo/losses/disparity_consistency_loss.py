@@ -12,27 +12,30 @@ class DisparityConsistencyLoss(nn.Module):
         self.left_to_right_transform = left_to_right_transform
         self.left_intrinsics = left_intrinsics
         self.right_intrinsics = right_intrinsics
-        self.weight = 0.9
+        self.weight = 1e-6
 
         self.baseline = baseline
         self.focal_length = focal_length
 
     def forward(self, left_depth, right_depth):
-        left_disparity = generate_disparity_from_depth(left_depth, self.baseline, self.focal_length)
-        right_disparity = generate_disparity_from_depth(right_depth, self.baseline, self.focal_length)
+        batch_size = left_depth.shape[0]
+        image_width = left_depth * left_depth.shape[3]
 
-        gen_right_depth = kornia.geometry.warp_frame_depth(left_disparity,
+        left_disparity = image_width * generate_disparity_from_depth(left_depth, self.baseline, self.focal_length)
+        right_disparity = image_width * generate_disparity_from_depth(right_depth, self.baseline, self.focal_length)
+
+        gen_right_disparity = kornia.geometry.warp_frame_depth(left_disparity,
                                                            right_depth,
-                                                           torch.inverse(self.left_to_right_transform),
-                                                           self.left_intrinsics)
+                                                           torch.inverse(self.left_to_right_transform[0:batch_size]),
+                                                           self.left_intrinsics[0:batch_size])
 
-        gen_left_depth = kornia.geometry.warp_frame_depth(right_disparity,
+        gen_left_disparity = kornia.geometry.warp_frame_depth(right_disparity,
                                                           left_depth,
-                                                          self.left_to_right_transform,
-                                                          self.right_intrinsics)
+                                                          self.left_to_right_transform[0:batch_size],
+                                                          self.right_intrinsics[0:batch_size])
 
-        right_loss = self.weight * self.l1_loss(gen_right_depth, right_depth)
+        right_loss = self.weight * self.l1_loss(gen_right_disparity, right_disparity)
 
-        left_loss = self.weight * self.l1_loss(gen_left_depth, left_depth)
+        left_loss = self.weight * self.l1_loss(gen_left_disparity, left_disparity)
 
         return (left_loss + right_loss) / 2

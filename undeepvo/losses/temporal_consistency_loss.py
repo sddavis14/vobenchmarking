@@ -11,7 +11,7 @@ class TemporalConsistencyLoss(nn.Module):
         self.ssim_loss = kornia.losses.SSIMLoss(11)
         self.l1_loss = nn.L1Loss(reduction='mean')
         self.intrinsics = intrinsics
-        self.weight = 0.9
+        self.weight = 0.85
 
     def forward(self, current_image, next_image,
                 current_depth, next_depth,
@@ -20,15 +20,17 @@ class TemporalConsistencyLoss(nn.Module):
         next_to_current = generate_transformation(current_translation, current_rotation)
         current_to_next = generate_transformation(next_translation, next_rotation)
 
+        batch_size = current_image.shape[0]
+
         gen_next_image = kornia.geometry.warp_frame_depth(current_image,
                                                           next_depth,
                                                           next_to_current,
-                                                          self.intrinsics)
+                                                          self.intrinsics[0:batch_size])
 
         gen_current_image = kornia.geometry.warp_frame_depth(next_image,
                                                              current_depth,
                                                              current_to_next,
-                                                             self.intrinsics)
+                                                             self.intrinsics[0:batch_size])
 
         prev_loss = (self.weight * self.ssim_loss(gen_next_image, next_image)
                      + (1 - self.weight) * self.l1_loss(gen_next_image, next_image))
@@ -36,4 +38,4 @@ class TemporalConsistencyLoss(nn.Module):
         current_loss = (self.weight * self.ssim_loss(gen_current_image, current_image)
                         + (1 - self.weight) * self.l1_loss(gen_current_image, current_image))
 
-        return (prev_loss + current_loss) / 2
+        return ((prev_loss + current_loss) / 2)

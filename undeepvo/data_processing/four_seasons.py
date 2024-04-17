@@ -7,15 +7,15 @@ import os.path
 from matplotlib import pyplot as plt
 import math
 import random
+from torch.utils.data import Dataset
 
-
-class FourSeasonsDataset():
+class FourSeasonsDataset(Dataset):
     def __init__(self, data_path='four_seasons'):
         print('Looking for dataset in \"' + data_path + '\"')
         glob_result = glob.glob(data_path + '/training/recording*/times.txt')
         self.dataset_paths = [os.path.dirname(x) for x in glob_result]
         self.dataset_times = [np.loadtxt(x + '/times.txt', dtype=int) for x in self.dataset_paths]
-
+        
         # List of all training images that have a consecutive image
         self.all_training_image_pairs = self.get_all_training_image_pairs()
 
@@ -26,8 +26,9 @@ class FourSeasonsDataset():
 
         self.original_height = 400
         self.original_width = 800
+        self.bottom_crop = 100
 
-        self.scale = 0.32
+        self.scale = 0.64
 
         self.height = int(self.original_height * self.scale)
         self.width = int(self.original_width * self.scale)
@@ -56,14 +57,32 @@ class FourSeasonsDataset():
         left_img = Image.open(left_img_path).resize((self.width, self.height))
         right_img = Image.open(right_img_path).resize((self.width, self.height))
 
-        left_img_numpy = (np.asarray(left_img, dtype=np.float32) / 127.5) - 1
-        right_img_numpy = (np.asarray(right_img, dtype=np.float32) / 127.5) - 1
+        cropped_height = int( self.height - (self.bottom_crop * self.scale))
+
+        left_img_numpy = (np.asarray(left_img, dtype=np.float32)[0:cropped_height] / 127.5) - 1
+        right_img_numpy = (np.asarray(right_img, dtype=np.float32)[0:cropped_height] / 127.5) - 1
 
         left_img_numpy = np.repeat(np.expand_dims(left_img_numpy, axis=0), 3, axis=0)
         right_img_numpy = np.repeat(np.expand_dims(right_img_numpy, axis=0), 3, axis=0)
 
         return left_img_numpy, right_img_numpy
+    
+    def __len__(self):
+        return len(self.all_training_image_pairs)
+    
+    def __getitem__(self, idx):
+        dataset_idx, img_idx = self.all_training_image_pairs[idx]
 
+        left, right = self.get_image_pair(dataset_idx, img_idx)
+        left_next, right_next = self.get_image_pair(dataset_idx, img_idx + 1)
+
+        left_tensor = torch.from_numpy(np.squeeze(left))
+        right_tensor = torch.from_numpy(np.squeeze(right))
+        left_next_tensor = torch.from_numpy(np.squeeze(left_next))
+        right_next_tensor = torch.from_numpy(np.squeeze(right_next))
+
+        return left_tensor, right_tensor, left_next_tensor, right_next_tensor
+    
     def baseline(self):
         return math.fabs(self.left_to_right_camera[0, 3])
 
@@ -78,37 +97,6 @@ class FourSeasonsDataset():
 
     def left_to_right_camera_extrinsics(self):
         return self.left_to_right_camera
-
-    def training_batch_generator(self, batch_size):
-        left_image_batch = np.empty((batch_size, 3,  self.height, self.width), dtype=np.float32)
-        right_image_batch = np.empty((batch_size, 3,  self.height, self.width), dtype=np.float32)
-        right_next_image_batch = np.empty((batch_size, 3, self.height, self.width), dtype=np.float32)
-        left_next_image_batch = np.empty((batch_size, 3, self.height, self.width), dtype=np.float32)
-
-        while True:
-            if len(self.remaining_batch_training_pairs) == 0:
-                self.remaining_batch_training_pairs = self.all_training_image_pairs.copy()
-                print('Finished an epoch.')
-
-            print('Remaining training pairs ' + str(len(self.remaining_batch_training_pairs)))
-
-            for idx in range(batch_size):
-                random_image = random.choice(self.remaining_batch_training_pairs)
-                self.remaining_batch_training_pairs.remove(random_image)
-
-                # Grab the next consecutive image after the randomly chosen one
-                # This is always ok since the set never includes the last image
-                next_random_image = (random_image[0], random_image[1] + 1)
-
-                left, right = self.get_image_pair(random_image[0], random_image[1])
-                left_next, right_next = self.get_image_pair(next_random_image[0], next_random_image[1])
-
-                left_image_batch[idx] = left
-                right_image_batch[idx] = right
-                left_next_image_batch[idx] = left_next
-                right_next_image_batch[idx] = right_next
-
-            yield left_image_batch, right_image_batch, left_next_image_batch, right_next_image_batch,
 
     def validation_batch_generator(self, batch_size):
         yield 0
