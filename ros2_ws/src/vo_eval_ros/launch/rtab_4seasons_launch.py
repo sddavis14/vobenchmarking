@@ -44,13 +44,25 @@ def generate_launch_description():
         Node(
             package='tf2_ros',
             executable='static_transform_publisher',
-            arguments=['0.17541216744862287', '0.0036894333751345677', '-0.05810612695941222', '3.128069', '0.0068314', '1.5751938', 'base_link', 'left_camera',  ],
+            arguments=['0.17541216744862287', '0.0036894333751345677', '-0.05810612695941222', '3.128069', '0.0068314', '1.5751938', 'base_link', 'left_camera_int',  ],
             output='screen'
         ),
         Node(
             package='tf2_ros',
             executable='static_transform_publisher',
-            arguments=['-0.12432919293024627', '0.0023471917960152505', '-0.05662052461099226', '3.1411816', '-0.0031757', '1.576158', 'base_link', 'right_camera',  ],
+            arguments=['-0.12432919293024627', '0.0023471917960152505', '-0.05662052461099226', '3.1411816', '-0.0031757', '1.576158', 'base_link', 'right_camera_int',  ],
+            output='screen'
+        ),
+        Node(
+            package='tf2_ros',
+            executable='static_transform_publisher',
+            arguments=['0', '0', '0', '1.576', '0', '0', 'right_camera_int', 'right_camera' ],
+            output='screen'
+        ),
+        Node(
+            package='tf2_ros',
+            executable='static_transform_publisher',
+            arguments=['0', '0', '0', '1.576', '0', '0', 'left_camera_int', 'left_camera' ],
             output='screen'
         ),
         Node(
@@ -68,12 +80,6 @@ def generate_launch_description():
         Node(
             package='vo_eval_ros',
             executable='rtab_gnss_odom_eval_supervisor',
-            arguments=[],
-            output='screen'
-        ),
-        Node(
-            package='vo_eval_ros',
-            executable='evaluator.py',
             arguments=[],
             output='screen'
         ),

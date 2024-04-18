@@ -65,6 +65,8 @@ def main(args=None):
     writer.create_topic(odom_gnss_topic)
 
     camera_gt = np.loadtxt(folder + 'poses/' + 'GNSSPoses.txt', delimiter=',')
+    sorted_indices = np.argsort(camera_gt[:, 0])
+    camera_gt = camera_gt[sorted_indices]
     timestamps = np.loadtxt(folder + 'times.txt', delimiter=' ')
 
     for i in range(0, maxlimit):
