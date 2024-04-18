@@ -67,10 +67,9 @@ def main(args=None):
     camera_gt = np.loadtxt(folder + 'poses/' + 'GNSSPoses.txt', delimiter=',')
     sorted_indices = np.argsort(camera_gt[:, 0])
     camera_gt = camera_gt[sorted_indices]
-    timestamps = np.loadtxt(folder + 'times.txt', delimiter=' ')
 
     for i in range(0, maxlimit):
-        filename = get_full_image_path('cam0/', str(int(timestamps[i][0])))
+        filename = get_full_image_path('cam0/', str(int(camera_gt[i][0])))
         img = Image.open(filename, mode='r', formats=None)
 
         img_byte_arr = io.BytesIO()
@@ -81,7 +80,7 @@ def main(args=None):
         msg.format = 'png'
         msg.data = np.array(img_byte_arr).tobytes()
 
-        ns = int(timestamps[i][0])
+        ns = int(camera_gt[i][0])
         t = Time(seconds=0, nanoseconds=ns)
         msg.header.stamp = t.to_msg()
         msg.header.frame_id = 'left_camera'
@@ -110,7 +109,7 @@ def main(args=None):
             ns)
 
     for i in range(0, maxlimit):
-        filename = get_full_image_path('cam1/', str(int(timestamps[i][0])))
+        filename = get_full_image_path('cam1/', str(int(camera_gt[i][0])))
         img = Image.open(filename, mode='r', formats=None)
 
         img_byte_arr = io.BytesIO()
@@ -121,7 +120,7 @@ def main(args=None):
         msg.format = 'png'
         msg.data = np.array(img_byte_arr).tobytes()
 
-        ns = int(timestamps[i][0])
+        ns = int(camera_gt[i][0])
         t = Time(seconds=0, nanoseconds=ns)
         msg.header.stamp = t.to_msg()
         msg.header.frame_id = 'right_camera'
@@ -151,7 +150,7 @@ def main(args=None):
 
     for i in range(0, maxlimit):
         msg = Odometry()
-        ns = int(timestamps[i][0])
+        ns = int(camera_gt[i][0])
         t = Time(seconds=0, nanoseconds=ns)
         msg.header.stamp = t.to_msg()
         msg.header.frame_id = 'map'
