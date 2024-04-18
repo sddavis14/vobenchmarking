@@ -23,6 +23,23 @@ find_package(tf2_eigen REQUIRED)
 
 ament_python_install_package(${PROJECT_NAME})
 
+# Install Python executables
+install(DIRECTORY
+        scripts/model
+        DESTINATION lib/${PROJECT_NAME}
+)
+
+install(PROGRAMS
+        scripts/undeep_vo_node.py
+        scripts/helpers.py
+        DESTINATION lib/${PROJECT_NAME}
+)
+
+install(PROGRAMS
+        scripts/weights_epoch_8
+        DESTINATION share/${PROJECT_NAME}
+)
+
 add_executable(rtab_odom_eval_supervisor src/rtab_odom_eval_supervisor.cpp)
 target_link_libraries (rtab_odom_eval_supervisor Eigen3::Eigen)
 
