@@ -158,7 +158,7 @@ def run(rank: int, world_size: int, total_epochs: int, batch_size: int):
             optimizer.step()
 
             if gpu_id == 0:
-                torch.distributed.all_reduce(loss, op=torch.distributed.ReduceOp.AVG)
+                #torch.distributed.all_reduce(loss, op=torch.distributed.ReduceOp.AVG)
                 train_loss = loss.item()
                 print('Step: ' + str(step) + '/' + str(math.ceil(len(dataset) // (world_size * batch_size))))
                 print('Step loss: ' + str(train_loss))

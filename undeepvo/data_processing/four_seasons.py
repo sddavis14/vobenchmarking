@@ -12,7 +12,7 @@ from torch.utils.data import Dataset
 
 class FourSeasonsDataset(Dataset):
     def __init__(self, data_path='four_seasons', data_type='training'):
-        print('Looking for dataset in \"' + data_path + '\"')
+        print('Looking for dataset in \"' + data_path + '/' + data_type + '\"')
         glob_result = glob.glob(data_path + '/' + data_type + '/recording*/recording*/times.txt')
         self.dataset_paths = [os.path.dirname(x) for x in glob_result]
         self.dataset_times = [np.loadtxt(x + '/times.txt', dtype=int) for x in self.dataset_paths]
