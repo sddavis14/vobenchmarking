@@ -51,7 +51,7 @@ def run(rank: int, world_size: int, total_epochs: int, batch_size: int):
     
     model = DDP(UnDeepVO().to(device), device_ids=[gpu_id], broadcast_buffers=False)
 
-    model.load_state_dict(torch.load('weights_epoch_0'))
+#    model.load_state_dict(torch.load('weights_epoch_0'))
 
     dataset = FourSeasonsDataset()
     validation_dataset = FourSeasonsDataset(data_type='validation')
@@ -61,7 +61,8 @@ def run(rank: int, world_size: int, total_epochs: int, batch_size: int):
     train_dataloader = DataLoader(dataset, batch_size=batch_size, pin_memory=True, shuffle=False, sampler=DistributedSampler(dataset))
     validation_dataloader = DataLoader(dataset, batch_size=batch_size, pin_memory=True, shuffle=False, sampler=DistributedSampler(validation_dataset))
 
-    optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
+    scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.8)
 
     right_intrinsics_tensor = torch.from_numpy(
         np.repeat(np.expand_dims(dataset.right_intrinsics(), axis=0), batch_size, axis=0)).to(device)
@@ -164,6 +165,8 @@ def run(rank: int, world_size: int, total_epochs: int, batch_size: int):
                 print('Epoch: ' + str(epoch))
                 with open('training_loss_log.txt', 'a') as training_loss_log:
                     training_loss_log.write(str(epoch) + ',' + str(step) + ',' + str(train_loss) + '\n')
+
+        scheduler.step()
 
         if gpu_id == 0:
             torch.save(model.state_dict(), f'weights_epoch_{str(epoch)}.tar.gz')
