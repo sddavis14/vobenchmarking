@@ -2,9 +2,9 @@ rosbag2_bagfile_information:
   version: 7
   storage_identifier: mcap
   duration:
-    nanoseconds: 33000079872
+    nanoseconds: 107283259392
   starting_time:
-    nanoseconds_since_epoch: 1585068331330778880
+    nanoseconds_since_epoch: 1585068331363779072
   message_count: 5000
   topics_with_message_count:
     - topic_metadata:
@@ -49,8 +49,8 @@ rosbag2_bagfile_information:
   files:
     - path: 4seasonsbag_0.mcap
       starting_time:
-        nanoseconds_since_epoch: 1585068331330778880
+        nanoseconds_since_epoch: 1585068331363779072
       duration:
-        nanoseconds: 33000079872
+        nanoseconds: 107283259392
       message_count: 5000
   custom_data: ~
