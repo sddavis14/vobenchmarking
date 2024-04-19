@@ -58,6 +58,7 @@ int main(int argc, char **argv) {
 
         auto gt_odom = odom_msg;
         gt_odom.child_frame_id = "base_link_gt";
+        gt_odom.header.frame_id = "odom";
         gt_odom.pose.pose.orientation.w = quat.w();
         gt_odom.pose.pose.orientation.x = quat.x();
         gt_odom.pose.pose.orientation.y = quat.y();

@@ -32,6 +32,7 @@ install(DIRECTORY
 install(PROGRAMS
         scripts/undeep_vo_node.py
         scripts/helpers.py
+#        scripts/weights_epoch_3.tar.gz
         DESTINATION lib/${PROJECT_NAME}
 )
 

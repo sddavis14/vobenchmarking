@@ -25,17 +25,8 @@ int main(int argc, char **argv) {
     auto tf_buffer = std::make_shared<tf2_ros::Buffer>(node->get_clock());
     auto tf_listener = std::make_shared<tf2_ros::TransformListener>(*tf_buffer);
 
-    while (!client->wait_for_service(1s)) {
-        if (!rclcpp::ok()) {
-            RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Interrupted while waiting for the service. Exiting.");
-            return 0;
-        }
-        RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "service not available, waiting again...");
-    }
-
     auto odom_publisher = node->create_publisher<nav_msgs::msg::Odometry>("gt_odom", 10);
 
-    bool initialized = false;
     auto odom_cb = [&](const nav_msgs::msg::Odometry& odom_msg) {
         auto request = std::make_shared<rtabmap_msgs::srv::ResetPose::Request>();
 
@@ -43,6 +34,7 @@ int main(int argc, char **argv) {
         auto ros_pos = odom_msg.pose.pose.position;
 
         auto gt_odom = odom_msg;
+        gt_odom.header.frame_id = "odom";
         gt_odom.child_frame_id = "base_link_gt";
         gt_odom.pose.pose.orientation.w = ros_quat.w;
         gt_odom.pose.pose.orientation.x = ros_quat.x;
@@ -73,7 +65,7 @@ int main(int argc, char **argv) {
     };
 
     auto odom_sub =
-            node->create_subscription<nav_msgs::msg::Odometry>("odom_gnss", 10, odom_cb);
+            node->create_subscription<nav_msgs::msg::Odometry>("odom_gnss", 10,  odom_cb);
 
     rclcpp::spin(node);
     rclcpp::shutdown();

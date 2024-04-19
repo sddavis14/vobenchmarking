@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 # import rclpy
 from rclpy.serialization import serialize_message
 from std_msgs.msg import String
@@ -11,12 +13,7 @@ import rosbag2_py
 from rclpy.time import Time
 import numpy as np
 
-folder = 'recording/'
-seq = 'P001'
-image_min = 1585068331330778880
-image_max = 1585068756635811584
-framerate = 20
-maxlimit = 1000
+folder = 'recording_2020-03-24_17-36-22/'
 
 import os
 
@@ -24,6 +21,7 @@ import os
 def get_full_image_path(cam_key: str, image_name: str) -> str:
     name: str = folder + 'undistorted_images/' + cam_key + image_name + '.png'
     return name
+
 
 def main(args=None):
     writer = rosbag2_py.SequentialWriter()
@@ -64,12 +62,14 @@ def main(args=None):
         serialization_format='cdr')
     writer.create_topic(odom_gnss_topic)
 
-    camera_gt = np.loadtxt(folder + 'poses/' + 'GNSSPoses.txt', delimiter=',')
-    sorted_indices = np.argsort(camera_gt[:, 0])
-    camera_gt = camera_gt[sorted_indices]
+    camera_gt = np.loadtxt(folder + 'GNSSPoses.txt', delimiter=',')
+    timestamps = np.loadtxt(folder + 'times.txt', delimiter=' ')
 
-    for i in range(0, maxlimit):
-        filename = get_full_image_path('cam0/', str(int(camera_gt[i][0])))
+    num_images = timestamps.shape[0]
+    num_gnss = camera_gt.shape[0]
+
+    for i in range(0, num_images):
+        filename = get_full_image_path('cam0/', str(int(timestamps[i][0])))
         img = Image.open(filename, mode='r', formats=None)
 
         img_byte_arr = io.BytesIO()
@@ -80,7 +80,7 @@ def main(args=None):
         msg.format = 'png'
         msg.data = np.array(img_byte_arr).tobytes()
 
-        ns = int(camera_gt[i][0])
+        ns = int(timestamps[i][0])
         t = Time(seconds=0, nanoseconds=ns)
         msg.header.stamp = t.to_msg()
         msg.header.frame_id = 'left_camera'
@@ -89,14 +89,14 @@ def main(args=None):
         info_msg.header = msg.header
         info_msg.height = 400
         info_msg.width = 800
-        info_msg.k = np.array([527.9990706330082, 0, 399.18451401412665,
-                               0, 527.963495807245, 172.8193108347693,
+        info_msg.k = np.array([501.4757919305817, 0, 421.7953735163109,
+                               0, 501.4757919305817, 167.65799492501083,
                                0, 0, 1])
         info_msg.r = np.array([1, 0, 0,
                                0, 1, 0,
                                0, 0, 1])
-        info_msg.p = np.array([527.9990706330082, 0, 399.18451401412665, 0,
-                               0, 527.963495807245, 172.8193108347693, 0,
+        info_msg.p = np.array([501.4757919305817, 0, 421.7953735163109, 0,
+                               0, 501.4757919305817, 167.65799492501083, 0,
                                0, 0, 1, 0])
 
         writer.write('camera_left/camera_info',
@@ -108,8 +108,8 @@ def main(args=None):
             serialize_message(msg),
             ns)
 
-    for i in range(0, maxlimit):
-        filename = get_full_image_path('cam1/', str(int(camera_gt[i][0])))
+    for i in range(0, num_images):
+        filename = get_full_image_path('cam1/', str(int(timestamps[i][0])))
         img = Image.open(filename, mode='r', formats=None)
 
         img_byte_arr = io.BytesIO()
@@ -120,7 +120,7 @@ def main(args=None):
         msg.format = 'png'
         msg.data = np.array(img_byte_arr).tobytes()
 
-        ns = int(camera_gt[i][0])
+        ns = int(timestamps[i][0])
         t = Time(seconds=0, nanoseconds=ns)
         msg.header.stamp = t.to_msg()
         msg.header.frame_id = 'right_camera'
@@ -129,14 +129,14 @@ def main(args=None):
         info_msg.header = msg.header
         info_msg.height = 400
         info_msg.width = 800
-        info_msg.k = np.array([529.2496538273606, 0, 412.4733148308946,
-                               0, 529.4013679656194, 172.1405434152354,
+        info_msg.k = np.array([501.4757919305817, 0, 421.7953735163109,
+                               0, 501.4757919305817, 167.65799492501083,
                                0, 0, 1])
         info_msg.r = np.array([1, 0, 0,
                                0, 1, 0,
                                0, 0, 1])
-        info_msg.p = np.array([529.2496538273606, 0, 412.4733148308946, -159.03748965956,
-                               0, 529.4013679656194, 172.1405434152354, 0,
+        info_msg.p = np.array([501.4757919305817, 0, 421.7953735163109, -150.691550759,
+                               0, 501.4757919305817, 167.65799492501083, 0,
                                0, 0, 1, 0])
 
         writer.write('camera_right/camera_info',
@@ -148,7 +148,7 @@ def main(args=None):
             serialize_message(msg),
             ns)
 
-    for i in range(0, maxlimit):
+    for i in range(0, num_gnss):
         msg = Odometry()
         ns = int(camera_gt[i][0])
         t = Time(seconds=0, nanoseconds=ns)

@@ -1,11 +1,8 @@
 #!/usr/bin/env python3
 
-#import rclpy
 from rclpy.serialization import serialize_message
-from std_msgs.msg import String
 from sensor_msgs.msg import CompressedImage
 from sensor_msgs.msg import CameraInfo
-from sensor_msgs.msg import Image as RosImage
 from nav_msgs.msg import Odometry
 
 from PIL import Image
@@ -15,14 +12,17 @@ from rclpy.time import Time
 import numpy as np
 import os
 
-folder = 'abandonedfactory/Easy'
-seq = 'P000'
+bag_name = 'office_bag'
+folder = 'office/Easy'
+seq = 'P001'
 framerate = 10
+
 
 def get_left_image_filename(idx):
     image_name = '{:06d}_left.png'.format(idx)
     name = folder + '/' + seq + '/image_left/' + image_name
     return name
+
 
 def get_right_image_filename(idx):
     image_name = '{:06d}_right.png'.format(idx)
@@ -37,7 +37,7 @@ def main(args=None):
     writer = rosbag2_py.SequentialWriter()
 
     storage_options = rosbag2_py._storage.StorageOptions(
-        uri='tartan_air_bag',
+        uri=bag_name,
         storage_id='mcap')
     converter_options = rosbag2_py._storage.ConverterOptions('', '')
     writer.open(storage_options, converter_options)
