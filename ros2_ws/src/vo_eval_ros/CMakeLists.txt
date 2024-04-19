@@ -35,19 +35,18 @@ install(PROGRAMS
         DESTINATION lib/${PROJECT_NAME}
 )
 
-install(PROGRAMS
-        scripts/weights_epoch_8
-        DESTINATION share/${PROJECT_NAME}
-)
-
 add_executable(rtab_odom_eval_supervisor src/rtab_odom_eval_supervisor.cpp)
 target_link_libraries (rtab_odom_eval_supervisor Eigen3::Eigen)
 
 add_executable(rtab_gnss_odom_eval_supervisor src/rtab_gnss_odom_eval_supervisor.cpp)
 target_link_libraries (rtab_gnss_odom_eval_supervisor Eigen3::Eigen)
 
+add_executable(vo_odom_stream_dumper src/vo_odom_stream_dumper.cpp)
+target_link_libraries (vo_odom_stream_dumper)
+
 ament_target_dependencies(rtab_odom_eval_supervisor rclcpp rtabmap_msgs nav_msgs tf2_ros tf2_eigen)
 ament_target_dependencies(rtab_gnss_odom_eval_supervisor rclcpp rtabmap_msgs nav_msgs tf2_ros tf2_eigen)
+ament_target_dependencies(vo_odom_stream_dumper rclcpp rtabmap_msgs nav_msgs tf2_ros tf2_eigen)
 
 install(TARGETS
   rtab_odom_eval_supervisor
@@ -56,6 +55,11 @@ install(TARGETS
 
 install(TARGETS
   rtab_gnss_odom_eval_supervisor
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+install(TARGETS
+  vo_odom_stream_dumper
   DESTINATION lib/${PROJECT_NAME}
 )
 
