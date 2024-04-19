@@ -2,10 +2,10 @@ rosbag2_bagfile_information:
   version: 7
   storage_identifier: mcap
   duration:
-    nanoseconds: 107283259392
+    nanoseconds: 494242182400
   starting_time:
-    nanoseconds_since_epoch: 1585068331363779072
-  message_count: 5000
+    nanoseconds_since_epoch: 1585067782107857152
+  message_count: 8037
   topics_with_message_count:
     - topic_metadata:
         name: odom_gnss
@@ -13,7 +13,7 @@ rosbag2_bagfile_information:
         serialization_format: cdr
         offered_qos_profiles: ""
         type_description_hash: ""
-      message_count: 1000
+      message_count: 4037
     - topic_metadata:
         name: camera_right/camera_info
         type: sensor_msgs/msg/CameraInfo
@@ -49,8 +49,8 @@ rosbag2_bagfile_information:
   files:
     - path: 4seasonsbag_0.mcap
       starting_time:
-        nanoseconds_since_epoch: 1585068331363779072
+        nanoseconds_since_epoch: 1585067782107857152
       duration:
-        nanoseconds: 107283259392
-      message_count: 5000
+        nanoseconds: 494242182400
+      message_count: 8037
   custom_data: ~
