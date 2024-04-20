@@ -29,18 +29,18 @@ class UnDeepVOModelRunner(Node):
 
         self.figure = plt.figure()
         plt.title('Left depth')
-        self.depth_img = plt.imshow(np.zeros(shape=(192, 512)), interpolation='nearest', cmap='inferno', vmin=0, vmax=2)
+        self.depth_img = plt.imshow(np.zeros(shape=(384, 512)), interpolation='nearest', cmap='inferno', vmin=0, vmax=2)
 
         self.odom_pub = self.create_publisher(Odometry, 'odom', 10)
         self.prev_img = None
-        self.img_resize_height = 256
+        self.img_resize_height = 384
         self.img_resize_width = 512
-        self.bottom_crop_pixels = 64
+        self.bottom_crop_pixels = 0
 
         self.device = torch.device('cpu')
         self.model = UnDeepVO().to(self.device)
 
-        state_dict = torch.load(get_package_share_directory('vo_eval_ros') + '/four_seasons_final_weights.tar.gz', map_location=self.device)
+        state_dict = torch.load(get_package_share_directory('vo_eval_ros') + '/tartan_air_epoch_4.tar.gz', map_location=self.device)
 
         from collections import OrderedDict
         new_state_dict = OrderedDict()
@@ -97,11 +97,11 @@ class UnDeepVOModelRunner(Node):
         image_data = msg.data
         image = Image.open(io.BytesIO(image_data))
         resized = image.resize((self.img_resize_width, self.img_resize_height))
-        new_height = self.img_resize_height - self.bottom_crop_pixels
 
-        img_numpy = (np.asarray(resized, dtype=np.float32)[0:new_height] / 127.5) - 1
-        expanded = np.expand_dims(np.repeat(np.expand_dims(img_numpy, axis=0), 3, axis=0), axis=0)
-        return expanded
+        img_numpy = (np.asarray(resized, dtype=np.float32) / 127.5) - 1
+        img_numpy = np.expand_dims(np.transpose(img_numpy, (2, 0, 1)), axis=0)
+
+        return img_numpy
 
     def mat_to_odom(self, mat):
         odom = Odometry()
@@ -136,6 +136,13 @@ class UnDeepVOModelRunner(Node):
             depth, (rotation, translation) = self.model(prev_torch, current_torch)
             transform = generate_transformation(translation, rotation)
             current_to_next = transform.cpu().numpy()[0]
+            cam_to_ned = np.array([[0, 1, 0, 0,],
+                                          [0, 0, 1, 0,],
+                                          [1, 0, 0, 0,],
+                                          [0, 0, 0, 1 ]], dtype=np.float32)
+
+            current_to_next = np.linalg.inv(cam_to_ned) @ current_to_next @ cam_to_ned
+
             self.odom_to_camera = self.odom_to_camera @ current_to_next
             self.depth_img.set_data(np.log10(depth.cpu().numpy()[0, 0]))
             odom = self.mat_to_odom(self.odom_to_camera)

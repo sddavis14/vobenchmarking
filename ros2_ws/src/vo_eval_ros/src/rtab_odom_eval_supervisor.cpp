@@ -25,14 +25,6 @@ int main(int argc, char **argv) {
     auto tf_buffer = std::make_shared<tf2_ros::Buffer>(node->get_clock());
     auto tf_listener = std::make_shared<tf2_ros::TransformListener>(*tf_buffer);
 
-    while (!client->wait_for_service(1s)) {
-        if (!rclcpp::ok()) {
-            RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Interrupted while waiting for the service. Exiting.");
-            return 0;
-        }
-        RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "service not available, waiting again...");
-    }
-
     auto odom_publisher = node->create_publisher<nav_msgs::msg::Odometry>("gt_odom", 10);
 
     bool initialized = false;
