@@ -38,7 +38,7 @@ install(PROGRAMS
 
 install(PROGRAMS
         scripts/four_seasons_weights.tar.gz
-        scripts/tartan_air_weights.gz
+        scripts/tartan_air_weights.tar.gz
         DESTINATION share/${PROJECT_NAME}
 )
 

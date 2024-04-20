@@ -144,8 +144,6 @@ class UnDeepVOModelRunner(Node):
 
         self.figure.canvas.draw()
         plt.pause(0.001)
-
-        print(self.odom_to_camera)
         self.prev_img = self.msg_to_numpy(msg)
 
 
