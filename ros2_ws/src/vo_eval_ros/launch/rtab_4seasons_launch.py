@@ -84,10 +84,4 @@ def generate_launch_description():
             arguments=[],
             output='screen'
         ),
-        # Node(
-        #     package='vo_eval_ros',
-        #     executable='undeep_vo_node.py',
-        #     arguments=[],
-        #     output='screen'
-        # )
     ])
