@@ -3,7 +3,7 @@
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import CompressedImage
-
+from rclpy import qos
 from nav_msgs.msg import Odometry
 import transforms3d as tfs
 from model.full_model import UnDeepVO
@@ -14,22 +14,22 @@ import torch
 from helpers import generate_transformation
 from ament_index_python.packages import get_package_share_directory
 from matplotlib import pyplot as plt
+from tf2_ros import TransformException
+from tf2_ros.buffer import Buffer
+from tf2_ros.transform_listener import TransformListener
+from helpers import msg_to_se3
+from rclpy.qos import QoSDurabilityPolicy, QoSHistoryPolicy, QoSReliabilityPolicy
 
 class UnDeepVOModelRunner(Node):
     def __init__(self):
         super().__init__('undeepvo_model_runner')
-        self.left_sub = self.create_subscription(
-            CompressedImage,
-            'camera_left/image_rect/compressed',
-            self.right_cam_sub,
-            10)
 
+        self.tf_buffer = Buffer(rclpy.time.Duration(seconds=100.0, nanoseconds=0))
+        self.tf_listener = TransformListener(self.tf_buffer, self, spin_thread=True)
 
         self.figure = plt.figure()
         plt.title('Left depth')
         self.depth_img = plt.imshow(np.zeros(shape=(192, 512)), interpolation='nearest', cmap='inferno', vmin=0, vmax=2)
-
-        self.left_sub  # prevent unused variable warning
 
         self.odom_pub = self.create_publisher(Odometry, 'odom', 10)
         self.prev_img = None
@@ -40,7 +40,7 @@ class UnDeepVOModelRunner(Node):
         self.device = torch.device('cpu')
         self.model = UnDeepVO().to(self.device)
 
-        state_dict = torch.load(get_package_share_directory('vo_eval_ros') + '/weights_epoch_8', map_location=self.device)
+        state_dict = torch.load(get_package_share_directory('vo_eval_ros') + '/weights_epoch_6.tar.gz', map_location=self.device)
 
         from collections import OrderedDict
         new_state_dict = OrderedDict()
@@ -51,7 +51,47 @@ class UnDeepVOModelRunner(Node):
         self.model.load_state_dict(new_state_dict)
         self.model.eval()
 
-        self.odom_to_camera = np.identity(4, dtype=np.float32)
+        self.odom_to_camera = None
+
+        self.left_sub = self.create_subscription(
+            CompressedImage,
+            'camera_left/image_rect/compressed',
+            self.right_cam_sub,
+            10)
+
+    def handle_init(self, stamp):
+        if self.odom_to_camera is not None:
+            return True
+
+        self.get_logger().info('Attempting to initialize pose')
+        try:
+            t = self.tf_buffer.lookup_transform(
+                'odom',
+                'base_link_gt',
+                stamp,
+                rclpy.time.Duration(seconds=0.5, nanoseconds=0))
+
+            mat = tfs.quaternions.quat2mat([t.transform.rotation.w,
+                                            t.transform.rotation.x,
+                                            t.transform.rotation.y,
+                                            t.transform.rotation.z,])
+            transform = np.identity(4, dtype=np.float32)
+            transform[:3, :3] = mat
+            transform[0, 3] = t.transform.translation.x
+            transform[1, 3] = t.transform.translation.y
+            transform[2, 3] = t.transform.translation.z
+            transform[3, 0] = 0
+            transform[3, 1] = 0
+            transform[3, 2] = 0
+            transform[3, 3] = 1
+            self.odom_to_camera = transform
+            print(self.odom_to_camera)
+            self.get_logger().info('Initialized pose with coordinate transform')
+            return True
+        except TransformException as ex:
+            self.get_logger().error(
+                f'Could not transform odom to base_link_gt: {ex}')
+            return False
 
     def msg_to_numpy(self, msg):
         image_data = msg.data
@@ -81,6 +121,9 @@ class UnDeepVOModelRunner(Node):
         return odom
 
     def right_cam_sub(self, msg):
+        if not self.handle_init(msg.header.stamp):
+            return
+
         current_img = self.msg_to_numpy(msg)
 
         if self.prev_img is None:

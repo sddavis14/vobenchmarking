@@ -78,6 +78,12 @@ def generate_launch_description():
             arguments=[],
             output='screen'
         ),
+        Node(
+            package='vo_eval_ros',
+            executable='vo_odom_stream_dumper',
+            arguments=[],
+            output='screen'
+        ),
         # Node(
         #     package='vo_eval_ros',
         #     executable='undeep_vo_node.py',

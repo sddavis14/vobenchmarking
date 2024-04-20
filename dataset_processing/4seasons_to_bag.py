@@ -14,6 +14,7 @@ from rclpy.time import Time
 import numpy as np
 
 folder = 'recording_2020-03-24_17-36-22/'
+max_images = 100000000
 
 import os
 
@@ -68,7 +69,7 @@ def main(args=None):
     num_images = timestamps.shape[0]
     num_gnss = camera_gt.shape[0]
 
-    for i in range(0, num_images):
+    for i in range(0, min(num_images, max_images)):
         filename = get_full_image_path('cam0/', str(int(timestamps[i][0])))
         img = Image.open(filename, mode='r', formats=None)
 
@@ -108,7 +109,7 @@ def main(args=None):
             serialize_message(msg),
             ns)
 
-    for i in range(0, num_images):
+    for i in range(0, min(num_images, max_images)):
         filename = get_full_image_path('cam1/', str(int(timestamps[i][0])))
         img = Image.open(filename, mode='r', formats=None)
 

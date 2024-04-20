@@ -32,9 +32,13 @@ install(DIRECTORY
 install(PROGRAMS
         scripts/undeep_vo_node.py
         scripts/helpers.py
-#        scripts/weights_epoch_3.tar.gz
         DESTINATION lib/${PROJECT_NAME}
 )
+
+#install(PROGRAMS
+#        scripts/weights_epoch_6.tar.gz
+#        DESTINATION share/${PROJECT_NAME}
+#)
 
 add_executable(rtab_odom_eval_supervisor src/rtab_odom_eval_supervisor.cpp)
 target_link_libraries (rtab_odom_eval_supervisor Eigen3::Eigen)
