@@ -28,15 +28,17 @@ int main(int argc, char **argv) {
     auto gt_odom_dump = [&](const nav_msgs::msg::Odometry& odom_msg) {
         auto ros_quat = odom_msg.pose.pose.orientation;
         auto ros_pos = odom_msg.pose.pose.position;
+        auto timestamp = odom_msg.header.stamp;
         auto gt_odom = odom_msg;
-        gtData << ros_pos.x << ","<< ros_pos.y << ","<< ros_pos.z << ","<< ros_quat.w << "," << ros_quat.x << "," << ros_quat.y<< "," << ros_quat.z << "\n";
+        gtData << ros_pos.x << ","<< ros_pos.y << ","<< ros_pos.z << ","<< ros_quat.w << "," << ros_quat.x << "," << ros_quat.y<< "," << ros_quat.z << "," << timestamp.nanosec <<"\n";
     };
 
     auto odom_dump = [&](const nav_msgs::msg::Odometry& odom_msg) {
         auto ros_quat = odom_msg.pose.pose.orientation;
         auto ros_pos = odom_msg.pose.pose.position;
+        auto timestamp = odom_msg.header.stamp;
         auto gt_odom = odom_msg;
-        predictedData << ros_pos.x << ","<< ros_pos.y << ","<< ros_pos.z << ","<< ros_quat.w << "," << ros_quat.x << "," << ros_quat.y<< "," << ros_quat.z << "\n";
+        predictedData << ros_pos.x << ","<< ros_pos.y << ","<< ros_pos.z << ","<< ros_quat.w << "," << ros_quat.x << "," << ros_quat.y<< "," << ros_quat.z << "," << timestamp.nanosec <<"\n";
     };
 
     auto odom_sub_1 =

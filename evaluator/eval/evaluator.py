@@ -14,7 +14,7 @@ def plot_error(abs_err, err_1, err_2, err_3, err_4, err_type: str):
         label1, label2, label3 = 'X Translation Error', 'Y Translation Error', 'Z Translation Error'
     plt.plot(order, err_1, label=label1, color='blue')
     plt.plot(order, err_2, label=label2, color='green')
-    plt.plot(order, err_3, label=label2, color='red')
+    plt.plot(order, err_3, label=label3, color='red')
     if err_type != TRANSLATION:
         plt.plot(order, err_4, label='Z Rotation Error', color='black')
     plt.xlabel("Time Sequence")
@@ -45,9 +45,11 @@ def plot_trajectory(gt_1, gt_2, pred_1, pred_2, file: str, x_label: str, y_label
 def evaluate():
     predicted = np.genfromtxt('../results/predicted.csv', delimiter=',', invalid_raise=False)
     ground_truth = np.genfromtxt('../results/gt.csv', delimiter=',', invalid_raise=False)
-    if len(predicted) != len(ground_truth):
-        predicted = predicted[:min(len(predicted), len(ground_truth))]
-        ground_truth = ground_truth[:min(len(predicted), len(ground_truth))]
+    timestamps_pred = predicted[:, 7]
+    timestamps_gt = ground_truth[:, 7]
+    common_ts, common_pred_ts, common_gt_ts = np.intersect1d(timestamps_pred, timestamps_gt, return_indices=True)
+    predicted = predicted[common_pred_ts]
+    ground_truth = ground_truth[common_gt_ts]
     pred_x, pred_y, pred_z = predicted[:, 0], predicted[:, 1], predicted[:, 2]
     pred_qw, pred_qx, pred_qy, pred_qz = predicted[:, 3], predicted[:, 4], predicted[:, 5], predicted[:, 6]
     gt_x, gt_y, gt_z = ground_truth[:, 0], ground_truth[:, 1], ground_truth[:, 2]
