@@ -14,8 +14,8 @@
 using namespace std::chrono_literals;
 
 int main(int argc, char **argv) {
-    std::ofstream gtData("./evaluator/results/gt.csv");
-    std::ofstream predictedData("./evaluator/results/predicted.csv");
+    std::ofstream gtData("/home/user/vobenchmarking/gt.csv");
+    std::ofstream predictedData("/home/user/vobenchmarking/predicted.csv");
 
     if (!gtData.is_open() || !predictedData.is_open()) {
         std::cerr << "Failed to open file for writing.\n";
@@ -30,7 +30,7 @@ int main(int argc, char **argv) {
         auto ros_pos = odom_msg.pose.pose.position;
         auto timestamp = odom_msg.header.stamp;
         auto gt_odom = odom_msg;
-        gtData << ros_pos.x << ","<< ros_pos.y << ","<< ros_pos.z << ","<< ros_quat.w << "," << ros_quat.x << "," << ros_quat.y<< "," << ros_quat.z << "," << timestamp.nanosec <<"\n";
+        gtData << ros_pos.x << ","<< ros_pos.y << ","<< ros_pos.z << ","<< ros_quat.w << "," << ros_quat.x << "," << ros_quat.y<< "," << ros_quat.z << "," << timestamp.sec << "," << timestamp.nanosec <<"\n";
     };
 
     auto odom_dump = [&](const nav_msgs::msg::Odometry& odom_msg) {
@@ -38,7 +38,7 @@ int main(int argc, char **argv) {
         auto ros_pos = odom_msg.pose.pose.position;
         auto timestamp = odom_msg.header.stamp;
         auto gt_odom = odom_msg;
-        predictedData << ros_pos.x << ","<< ros_pos.y << ","<< ros_pos.z << ","<< ros_quat.w << "," << ros_quat.x << "," << ros_quat.y<< "," << ros_quat.z << "," << timestamp.nanosec <<"\n";
+        predictedData << ros_pos.x << ","<< ros_pos.y << ","<< ros_pos.z << ","<< ros_quat.w << "," << ros_quat.x << "," << ros_quat.y<< "," << ros_quat.z << "," << timestamp.sec << "," << timestamp.nanosec <<"\n";
     };
 
     auto odom_sub_1 =
