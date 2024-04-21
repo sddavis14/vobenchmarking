@@ -14,7 +14,7 @@ from rclpy.time import Time
 import numpy as np
 
 folder = 'recording_2020-03-24_17-36-22/'
-max_images = 100000000
+max_images = 1e12
 
 import os
 
