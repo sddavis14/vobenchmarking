@@ -27,9 +27,9 @@ class UnDeepVOModelRunner(Node):
         self.tf_buffer = Buffer(rclpy.time.Duration(seconds=100.0, nanoseconds=0))
         self.tf_listener = TransformListener(self.tf_buffer, self, spin_thread=True)
 
-        self.figure = plt.figure()
-        plt.title('Left depth')
-        self.depth_img = plt.imshow(np.zeros(shape=(192, 512)), interpolation='nearest', cmap='inferno', vmin=0, vmax=2)
+#        self.figure = plt.figure()
+#        plt.title('Left depth')
+#        self.depth_img = plt.imshow(np.zeros(shape=(192, 512)), interpolation='nearest', cmap='inferno', vmin=0, vmax=2)
 
         self.odom_pub = self.create_publisher(Odometry, 'odom', 10)
         self.prev_img = None
@@ -37,7 +37,7 @@ class UnDeepVOModelRunner(Node):
         self.img_resize_width = 512
         self.bottom_crop_pixels = 64
 
-        self.device = torch.device('cpu')
+        self.device = torch.device('cuda')
         self.model = UnDeepVO().to(self.device)
 
         state_dict = torch.load(get_package_share_directory('vo_eval_ros') + '/four_seasons_weights.tar.gz', map_location=self.device)
@@ -137,13 +137,13 @@ class UnDeepVOModelRunner(Node):
             transform = generate_transformation(translation, rotation)
             current_to_next = transform.cpu().numpy()[0]
             self.odom_to_camera = self.odom_to_camera @ current_to_next
-            self.depth_img.set_data(np.log10(depth.cpu().numpy()[0, 0]))
+#            self.depth_img.set_data(np.log10(depth.cpu().numpy()[0, 0]))
             odom = self.mat_to_odom(self.odom_to_camera)
             odom.header.stamp = msg.header.stamp
             self.odom_pub.publish(odom)
 
-        self.figure.canvas.draw()
-        plt.pause(0.001)
+#        self.figure.canvas.draw()
+#        plt.pause(0.001)
         self.prev_img = self.msg_to_numpy(msg)
 
 

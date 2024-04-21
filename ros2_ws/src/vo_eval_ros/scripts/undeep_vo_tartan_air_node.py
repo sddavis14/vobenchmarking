@@ -19,6 +19,8 @@ from tf2_ros.buffer import Buffer
 from tf2_ros.transform_listener import TransformListener
 from helpers import msg_to_se3
 from rclpy.qos import QoSDurabilityPolicy, QoSHistoryPolicy, QoSReliabilityPolicy
+from rclpy.executors import MultiThreadedExecutor
+
 
 class UnDeepVOModelRunner(Node):
     def __init__(self):
@@ -27,9 +29,9 @@ class UnDeepVOModelRunner(Node):
         self.tf_buffer = Buffer(rclpy.time.Duration(seconds=100.0, nanoseconds=0))
         self.tf_listener = TransformListener(self.tf_buffer, self, spin_thread=True)
 
-        self.figure = plt.figure()
-        plt.title('Left depth')
-        self.depth_img = plt.imshow(np.zeros(shape=(384, 512)), interpolation='nearest', cmap='inferno', vmin=0, vmax=2)
+#        self.figure = plt.figure()
+#        plt.title('Left depth')
+#        self.depth_img = plt.imshow(np.zeros(shape=(384, 512)), interpolation='nearest', cmap='inferno', vmin=0, vmax=2)
 
         self.odom_pub = self.create_publisher(Odometry, 'odom', 10)
         self.prev_img = None
@@ -37,8 +39,8 @@ class UnDeepVOModelRunner(Node):
         self.img_resize_width = 512
         self.bottom_crop_pixels = 0
 
-        self.device = torch.device('cpu')
-        self.model = UnDeepVO().to(self.device)
+        self.device = torch.device('cuda')
+        self.model = UnDeepVO(max_depth=100, min_depth=0.25).to(self.device)
 
         state_dict = torch.load(get_package_share_directory('vo_eval_ros') + '/tartan_air_weights.tar.gz', map_location=self.device)
 
@@ -68,7 +70,7 @@ class UnDeepVOModelRunner(Node):
             t = self.tf_buffer.lookup_transform(
                 'odom',
                 'base_link_gt',
-                stamp,
+                stamp,# rclpy.time.Time(seconds=0.0, nanoseconds=0)
                 rclpy.time.Duration(seconds=0.5, nanoseconds=0))
 
             mat = tfs.quaternions.quat2mat([t.transform.rotation.w,
@@ -144,13 +146,13 @@ class UnDeepVOModelRunner(Node):
             current_to_next = np.linalg.inv(cam_to_ned) @ current_to_next @ cam_to_ned
 
             self.odom_to_camera = self.odom_to_camera @ current_to_next
-            self.depth_img.set_data(np.log10(depth.cpu().numpy()[0, 0]))
+#            self.depth_img.set_data(np.log10(depth.cpu().numpy()[0, 0]))
             odom = self.mat_to_odom(self.odom_to_camera)
             odom.header.stamp = msg.header.stamp
             self.odom_pub.publish(odom)
 
-        self.figure.canvas.draw()
-        plt.pause(0.001)
+#        self.figure.canvas.draw()
+#        plt.pause(0.001)
         self.prev_img = self.msg_to_numpy(msg)
 
 
@@ -159,8 +161,12 @@ def main(args=None):
 
     model_runner = UnDeepVOModelRunner()
 
-    rclpy.spin(model_runner)
+    executor = MultiThreadedExecutor()
 
+    executor.add_node(model_runner) 
+    executor.spin()
+    executor.shutdown()
+    
     model_runner.destroy_node()
     rclpy.shutdown()
 
