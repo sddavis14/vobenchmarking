@@ -65,26 +65,23 @@ def plot_trajectory(gt_1, gt_2, pred_1, pred_2, file: str, x_label: str, y_label
     plt.close()
 
 
+def reduce(result_data):
+    result_dict = dict()
+    for result_tuple in result_data:
+        result_dict[result_tuple[7]] = result_tuple
+    return np.array(list(result_dict.values()))
+
+
 def evaluate():
     predicted = np.genfromtxt('../results/predicted.csv', delimiter=',', invalid_raise=False)
     ground_truth = np.genfromtxt('../results/gt.csv', delimiter=',', invalid_raise=False)
 
-    col_indices = [7, 8]
-    pred_ts_keys = np.core.defchararray.add(predicted[:, col_indices[0]].astype(str), predicted[:, col_indices[1]].astype(str))
-    gt_ts_keys = np.core.defchararray.add(ground_truth[:, col_indices[0]].astype(str), ground_truth[:, col_indices[1]].astype(str))
+    pred_time_aligned = reduce(predicted)
+    gt_time_aligned = reduce(ground_truth)
 
-    _, idx_pred_ts = np.unique(pred_ts_keys, return_inverse=True)
-    _, idx_gt_ts = np.unique(gt_ts_keys, return_inverse=True)
-
-    common_indices = np.intersect1d(idx_pred_ts, idx_gt_ts)
-
-    pred_time_aligned = predicted[np.isin(idx_pred_ts, common_indices)]
-    sorted_indices = np.argsort(pred_time_aligned[:, 7])
-    pred_time_aligned = pred_time_aligned[sorted_indices]
-
-    gt_time_aligned = ground_truth[np.isin(idx_gt_ts, common_indices)]
-    sorted_indices = np.argsort(gt_time_aligned[:, 7])
-    gt_time_aligned = gt_time_aligned[sorted_indices]
+    reduced_len = min(len(pred_time_aligned), len(gt_time_aligned))
+    pred_time_aligned = pred_time_aligned[: reduced_len]
+    gt_time_aligned = gt_time_aligned[: reduced_len]
 
     timestamps = ground_truth[:, 8]
 
