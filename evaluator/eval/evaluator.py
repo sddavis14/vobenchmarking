@@ -6,27 +6,50 @@ TRANSLATION: str = "trans"
 ROTATION: str = "rot"
 
 
-def plot_error(abs_err, err_1, err_2, err_3, err_4, err_type: str):
+def quat_to_eulers(x, y, z, w):
+    sinr_cosp = 2 * (w * x + y * z)
+    cosr_cosp = 1 - 2 * (x ** 2 + y ** 2)
+    roll_x = np.arctan2(sinr_cosp, cosr_cosp)
+
+    # Pitch (y-axis rotation)
+    sinp = 2 * (w * y - z * x)
+    pitch_y = np.where(np.abs(sinp) >= 1, np.sign(sinp) * np.pi / 2, np.arcsin(sinp))
+
+    # Yaw (z-axis rotation)
+    siny_cosp = 2 * (w * z + x * y)
+    cosy_cosp = 1 - 2 * (y ** 2 + z ** 2)
+    yaw_z = np.arctan2(siny_cosp, cosy_cosp)
+
+    return roll_x, pitch_y, yaw_z
+
+
+def plot_error(abs_err, err_1, err_2, err_3, timestamps, err_type: str):
     order = np.arange(0, len(err_1), 1)
     if err_type != TRANSLATION:
-        label1, label2, label3 = 'W Rotation Error', 'X Rotation Error', 'Y Rotation Error'
+        label1, label2, label3 = 'Roll Error(rad)', 'Pitch Error(rad)', 'Yaw Error(rad)'
     else:
-        label1, label2, label3 = 'X Translation Error', 'Y Translation Error', 'Z Translation Error'
-    plt.plot(order, err_1, label=label1, color='blue')
+        label1, label2, label3 = 'X Translation Error(m)', 'Y Translation Error(m)', \
+            'Z Translation Error(m)'
+    plt.plot(order, err_1, label=label1, color='red')
     plt.plot(order, err_2, label=label2, color='green')
-    plt.plot(order, err_3, label=label3, color='red')
-    if err_type != TRANSLATION:
-        plt.plot(order, err_4, label='Z Rotation Error', color='black')
+    plt.plot(order, err_3, label=label3, color='blue')
     plt.xlabel("Time Sequence")
-    plt.ylabel("Error")
+    if err_type != TRANSLATION:
+        plt.ylabel("Absolute Rotation Error(rad)")
+    else:
+        plt.ylabel("Absolute Translation Error(m)")
     plt.legend()
     plt.grid(True)
     if err_type != TRANSLATION:
-        plt.title(f'Rotational Error: {abs_err}')
+        plt.title(f'Rotational Error (Euler Angles)')
+        plt.tight_layout()
         plt.savefig('../plots/rot_error.png')
+        print(f'Rotational Error = {abs_err} rad')
     else:
-        plt.title(f'Translational Error: {abs_err}')
+        plt.title(f'Translational Error (X, Y, Zs)')
+        plt.tight_layout()
         plt.savefig('../plots/translation_error.png')
+        print(f'Translational Error = {abs_err} m')
     plt.close()
 
 
@@ -45,31 +68,52 @@ def plot_trajectory(gt_1, gt_2, pred_1, pred_2, file: str, x_label: str, y_label
 def evaluate():
     predicted = np.genfromtxt('../results/predicted.csv', delimiter=',', invalid_raise=False)
     ground_truth = np.genfromtxt('../results/gt.csv', delimiter=',', invalid_raise=False)
-    timestamps_pred = predicted[:, 7]
-    timestamps_gt = ground_truth[:, 7]
-    common_ts, common_pred_ts, common_gt_ts = np.intersect1d(timestamps_pred, timestamps_gt, return_indices=True)
-    predicted = predicted[common_pred_ts]
-    ground_truth = ground_truth[common_gt_ts]
+
+    col_indices = [7, 8]
+    pred_ts_keys = np.core.defchararray.add(predicted[:, col_indices[0]].astype(str), predicted[:, col_indices[1]].astype(str))
+    gt_ts_keys = np.core.defchararray.add(ground_truth[:, col_indices[0]].astype(str), ground_truth[:, col_indices[1]].astype(str))
+
+    _, idx_pred_ts = np.unique(pred_ts_keys, return_inverse=True)
+    _, idx_gt_ts = np.unique(gt_ts_keys, return_inverse=True)
+
+    common_indices = np.intersect1d(idx_pred_ts, idx_gt_ts)
+
+    pred_time_aligned = predicted[np.isin(idx_pred_ts, common_indices)]
+    sorted_indices = np.argsort(pred_time_aligned[:, 7])
+    pred_time_aligned = pred_time_aligned[sorted_indices]
+
+    gt_time_aligned = ground_truth[np.isin(idx_gt_ts, common_indices)]
+    sorted_indices = np.argsort(gt_time_aligned[:, 7])
+    gt_time_aligned = gt_time_aligned[sorted_indices]
+
+    timestamps = ground_truth[:, 8]
+
     pred_x, pred_y, pred_z = predicted[:, 0], predicted[:, 1], predicted[:, 2]
-    pred_qw, pred_qx, pred_qy, pred_qz = predicted[:, 3], predicted[:, 4], predicted[:, 5], predicted[:, 6]
+    pred_qw, pred_qx, pred_qy, pred_qz = pred_time_aligned[:, 3], pred_time_aligned[:, 4],\
+        pred_time_aligned[:, 5], pred_time_aligned[:, 6]
+    pred_roll, pred_pitch, pred_yaw = quat_to_eulers(pred_qx, pred_qy, pred_qz, pred_qw)
+
     gt_x, gt_y, gt_z = ground_truth[:, 0], ground_truth[:, 1], ground_truth[:, 2]
-    gt_qw, gt_qx, gt_qy, gt_qz = ground_truth[:, 3], ground_truth[:, 4], ground_truth[:, 5], ground_truth[:, 6]
+    gt_qw, gt_qx, gt_qy, gt_qz = gt_time_aligned[:, 3], gt_time_aligned[:, 4],\
+        gt_time_aligned[:, 5], gt_time_aligned[:, 6]
+    gt_roll, gt_pitch, gt_yaw = quat_to_eulers(gt_qx, gt_qy, gt_qz, gt_qw)
 
-    plot_trajectory(gt_x, gt_y, pred_x, pred_y, 'xyplane.png', 'X-Direction', 'Y-Direction', 'X-Y Projection')
-    plot_trajectory(gt_x, gt_z, pred_x, pred_z, 'xzplane.png', 'X-Direction', 'Z-Direction', 'X-Z Projection')
-    plot_trajectory(gt_y, gt_z, pred_y, pred_z, 'yzplane.png', 'Y-Direction', 'Z-Direction', 'Y-Z Projection')
+    plot_trajectory(gt_x, gt_y, pred_x, pred_y, 'xyplane.png', 'X-Direction (m)', 'Y-Direction (m)', 'X-Y Projection')
+    plot_trajectory(gt_x, gt_z, pred_x, pred_z, 'xzplane.png', 'X-Direction (m)', 'Z-Direction (m)', 'X-Z Projection')
+    plot_trajectory(gt_y, gt_z, pred_y, pred_z, 'yzplane.png', 'Y-Direction (m)', 'Z-Direction (m)', 'Y-Z Projection')
 
-    t_x_err, t_y_err, t_z_err = (pred_x - gt_x) ** 2 / len(gt_x), \
-                                (pred_y - gt_y) ** 2 / len(gt_y), (pred_z - gt_z) ** 2 / len(gt_z)
-    r_w_err, r_x_err, r_y_err, r_z_err = (pred_qw - gt_qw) ** 2 / len(gt_qw), \
-                                (pred_qx - gt_qx) ** 2 / len(gt_qx), \
-        (pred_qy - gt_qy) ** 2 / len(gt_qy), (pred_qz - gt_qz) ** 2 / len(gt_qz)
+    t_x_err, t_y_err, t_z_err = abs(pred_time_aligned[:, 0] - gt_time_aligned[:, 0]) / len(gt_time_aligned), \
+                                abs(pred_time_aligned[:, 1] - gt_time_aligned[:, 1]) / len(gt_time_aligned), \
+        abs(pred_time_aligned[:, 2] - gt_time_aligned[:, 2]) / len(gt_time_aligned)
+    r_roll_err, r_pitch_err, r_yaw_err = abs(pred_roll - gt_roll) / len(gt_roll), \
+                                abs(pred_pitch - gt_pitch) / len(gt_pitch), \
+        abs(pred_yaw - gt_yaw) / len(gt_yaw)
 
     translation_err = t_x_err + t_y_err + t_z_err
-    rotational_err = r_w_err + r_x_err + r_y_err + r_z_err
+    rotational_err = r_roll_err + r_pitch_err + r_yaw_err
 
-    plot_error(np.sum(translation_err), t_x_err, t_y_err, t_z_err, None, "trans")
-    plot_error(np.sum(rotational_err), r_w_err, r_x_err, r_y_err, r_z_err, "rot")
+    plot_error(np.sum(translation_err)/len(translation_err), t_x_err, t_y_err, t_z_err, timestamps, "trans")
+    plot_error(np.sum(rotational_err)/len(rotational_err), r_roll_err, r_pitch_err, r_yaw_err, timestamps, "rot")
 
 
 if __name__ == '__main__':
