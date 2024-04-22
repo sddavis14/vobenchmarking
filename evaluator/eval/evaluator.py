@@ -46,7 +46,7 @@ def plot_error(abs_err, err_1, err_2, err_3, timestamps, err_type: str):
         plt.savefig('../plots/rot_error.png')
         print(f'Rotational Error = {abs_err} rad')
     else:
-        plt.title(f'Translational Error (X, Y, Zs)')
+        plt.title(f'Translational Error (X, Y, Z)')
         plt.tight_layout()
         plt.savefig('../plots/translation_error.png')
         print(f'Translational Error = {abs_err} m')
@@ -102,12 +102,12 @@ def evaluate():
     plot_trajectory(gt_x, gt_z, pred_x, pred_z, 'xzplane.png', 'X-Direction (m)', 'Z-Direction (m)', 'X-Z Projection')
     plot_trajectory(gt_y, gt_z, pred_y, pred_z, 'yzplane.png', 'Y-Direction (m)', 'Z-Direction (m)', 'Y-Z Projection')
 
-    t_x_err, t_y_err, t_z_err = abs(pred_time_aligned[:, 0] - gt_time_aligned[:, 0]) / len(gt_time_aligned), \
-                                abs(pred_time_aligned[:, 1] - gt_time_aligned[:, 1]) / len(gt_time_aligned), \
-        abs(pred_time_aligned[:, 2] - gt_time_aligned[:, 2]) / len(gt_time_aligned)
-    r_roll_err, r_pitch_err, r_yaw_err = abs(pred_roll - gt_roll) / len(gt_roll), \
-                                abs(pred_pitch - gt_pitch) / len(gt_pitch), \
-        abs(pred_yaw - gt_yaw) / len(gt_yaw)
+    t_x_err, t_y_err, t_z_err = abs(pred_time_aligned[:, 0] - gt_time_aligned[:, 0]), \
+                                abs(pred_time_aligned[:, 1] - gt_time_aligned[:, 1]), \
+        abs(pred_time_aligned[:, 2] - gt_time_aligned[:, 2])
+    r_roll_err, r_pitch_err, r_yaw_err = abs(pred_roll - gt_roll), \
+                                abs(pred_pitch - gt_pitch), \
+        abs(pred_yaw - gt_yaw)
 
     translation_err = t_x_err + t_y_err + t_z_err
     rotational_err = r_roll_err + r_pitch_err + r_yaw_err
