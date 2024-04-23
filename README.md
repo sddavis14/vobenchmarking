@@ -50,6 +50,8 @@ the complete datasets are available at:
 <li> TartanAir: <a href="https://theairlab.org/tartanair-dataset/"> Follow the instruction given on this link.</a>
 </ul>
 
+For 4Seasons, both images and ground truth pose must be downloaded and the GNSSPoses.txt must be added to the dataset folder of the image files.
+
 <h4>Generating ROS bags:</h4>
 Once the dataset has been downloaded, place it in the main project directory.
 
