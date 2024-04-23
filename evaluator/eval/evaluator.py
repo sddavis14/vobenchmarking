@@ -20,7 +20,7 @@ def quat_to_eulers(x, y, z, w):
     cosy_cosp = 1 - 2 * (y ** 2 + z ** 2)
     yaw_z = np.arctan2(siny_cosp, cosy_cosp)
 
-    return roll_x, pitch_y, yaw_z
+    return np.unwrap(roll_x), np.unwrap(pitch_y), np.unwrap(yaw_z)
 
 
 def plot_error(abs_err, err_1, err_2, err_3, timestamps, err_type: str):
